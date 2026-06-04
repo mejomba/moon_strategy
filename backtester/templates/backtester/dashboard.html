@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Strategy Tester</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 900px; color: #1a1a1a; }
+        h1 { margin-bottom: 0.25rem; }
+        .muted { color: #666; }
+        .cards { display: flex; gap: 1rem; margin: 1.5rem 0; }
+        .card { flex: 1; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
+        .card .num { font-size: 2rem; font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+        th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #eee; }
+        a { color: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>Strategy Tester</h1>
+    <p class="muted">Backtest and evaluate trading strategies.</p>
+
+    <div class="cards">
+        <div class="card"><div class="num">{{ strategy_count }}</div>Strategies</div>
+        <div class="card"><div class="num">{{ backtest_count }}</div>Backtests</div>
+    </div>
+
+    <h2>Strategies</h2>
+    <table>
+        <thead><tr><th>Name</th><th>Status</th><th>Runs</th></tr></thead>
+        <tbody>
+        {% for strategy in strategies %}
+            <tr>
+                <td>{{ strategy.name }}</td>
+                <td>{{ strategy.get_status_display }}</td>
+                <td>{{ strategy.run_count }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3" class="muted">No strategies yet. Add one in the <a href="/admin/">admin</a>.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Recent backtests</h2>
+    <table>
+        <thead><tr><th>Strategy</th><th>Symbol</th><th>Status</th><th>Return %</th></tr></thead>
+        <tbody>
+        {% for bt in recent_backtests %}
+            <tr>
+                <td>{{ bt.strategy.name }}</td>
+                <td>{{ bt.symbol }}</td>
+                <td>{{ bt.get_status_display }}</td>
+                <td>{{ bt.total_return_pct|default:"—" }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4" class="muted">No backtests yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
