@@ -58,6 +58,11 @@ Built-in strategies:
   (params: `fast`, `slow`, `allow_short`).
 - `rsi` — buy oversold, exit overbought
   (params: `period`, `oversold`, `overbought`).
+- `graph` — executes a no-code **logic graph** from the frontend builder
+  (`parameters.graph`). Indicators (`price`/`sma`/`ema`/`rsi`/`constant`),
+  conditions (`greater_than`/`less_than`/`crosses_above`/`crosses_below`),
+  logic (`and`/`or`/`not`) and signals (`enter_long`/`exit`) are interpreted by
+  `strategy_core.graph`. This is the shared, versioned strategy-JSON contract.
 
 ### Trading costs
 

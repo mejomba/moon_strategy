@@ -683,10 +683,12 @@ components:
       enum:
       - sma_crossover
       - rsi
+      - graph
       type: string
       description: |-
         * `sma_crossover` - SMA Crossover
         * `rsi` - RSI
+        * `graph` - Graph
     PaginatedBacktestList:
       type: object
       required:
