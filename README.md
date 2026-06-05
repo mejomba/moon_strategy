@@ -109,6 +109,11 @@ the source of truth the frontend consumes to generate its typed client.
 | `GET /api/schema/` | OpenAPI 3 schema |
 | `GET /api/schema/swagger-ui/` | Swagger UI |
 
+Backtest responses also include a **cost breakdown** (`total_commission`,
+`total_funding`) and heuristic **reliability warnings** (`warnings`: overfitting
+/ in-sample-only caveats from `strategy_core.quality`). Full out-of-sample and
+walk-forward validation is a later roadmap phase.
+
 `Strategy.parameters` is a free-form JSON object that carries the engine
 parameters plus the frontend's `_meta` envelope (strategy-JSON schema version +
 logic graph); it is kept byte-for-byte compatible across repos.

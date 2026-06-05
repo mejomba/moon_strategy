@@ -300,7 +300,9 @@ components:
   schemas:
     Backtest:
       type: object
-      description: Read representation of a backtest run, including aggregate metrics.
+      description: |-
+        Read representation of a backtest run, including aggregate metrics,
+        cost breakdown, and reliability warnings.
       properties:
         id:
           type: integer
@@ -387,6 +389,23 @@ components:
           format: double
           readOnly: true
           nullable: true
+        total_commission:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        total_funding:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/QualityWarning'
+          readOnly: true
         error_message:
           type: string
           readOnly: true
@@ -420,7 +439,10 @@ components:
       - strategy_name
       - symbol
       - timeframe
+      - total_commission
+      - total_funding
       - total_return_pct
+      - warnings
       - win_rate_pct
     BacktestCreate:
       type: object
@@ -569,6 +591,23 @@ components:
           format: double
           readOnly: true
           nullable: true
+        total_commission:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        total_funding:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/QualityWarning'
+          readOnly: true
         error_message:
           type: string
           readOnly: true
@@ -608,7 +647,10 @@ components:
       - strategy_name
       - symbol
       - timeframe
+      - total_commission
+      - total_funding
       - total_return_pct
+      - warnings
       - win_rate_pct
     BacktestStatusEnum:
       enum:
@@ -745,6 +787,23 @@ components:
           type: string
           format: date-time
           readOnly: true
+    QualityWarning:
+      type: object
+      description: A reliability/overfitting caveat about a backtest result.
+      properties:
+        code:
+          type: string
+          description: Stable warning identifier.
+        severity:
+          type: string
+          description: '"info" or "warning".'
+        message:
+          type: string
+          description: Human-readable explanation.
+      required:
+      - code
+      - message
+      - severity
     SideEnum:
       enum:
       - long

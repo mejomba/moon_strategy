@@ -16,6 +16,7 @@ from django.utils import timezone
 from strategy_core.costs import CostModel
 from strategy_core.data import Bar, load_csv, synthetic_from_dates
 from strategy_core.engine import BacktestEngine
+from strategy_core.quality import assess_quality
 from strategy_core.strategies import get_strategy
 
 
@@ -137,6 +138,12 @@ def run_backtest(backtest):
         backtest.max_drawdown_pct = m.max_drawdown_pct
         backtest.sharpe_ratio = m.sharpe_ratio
         backtest.win_rate_pct = m.win_rate_pct
+        backtest.total_commission = _to_decimal(m.total_commission, "0.01")
+        backtest.total_funding = _to_decimal(m.total_funding, "0.01")
+        backtest.warnings = [
+            w.to_dict()
+            for w in assess_quality(m, float(backtest.initial_capital))
+        ]
         backtest.equity_curve = _serialize_equity_curve(result.equity_curve)
         backtest.status = Backtest.Status.COMPLETED
         backtest.completed_at = timezone.now()

@@ -95,6 +95,18 @@ class Backtest(models.Model):
     sharpe_ratio = models.FloatField(null=True, blank=True)
     win_rate_pct = models.FloatField(null=True, blank=True)
 
+    # Cost breakdown totals across the run (populated on completion).
+    total_commission = models.DecimalField(
+        max_digits=18, decimal_places=2, null=True, blank=True
+    )
+    total_funding = models.DecimalField(
+        max_digits=18, decimal_places=2, null=True, blank=True
+    )
+
+    # Reliability / overfitting warnings produced by strategy_core.quality, as a
+    # list of {"code", "severity", "message"}. Empty until the run completes.
+    warnings = models.JSONField(default=list, blank=True)
+
     # Portfolio value sampled per bar, for charting the equity curve. Stored as
     # a list of {"t": ISO-8601 timestamp, "equity": float}; empty until the run
     # completes. May be downsampled for long runs (see runner).
