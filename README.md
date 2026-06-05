@@ -61,8 +61,9 @@ Built-in strategies:
 - `graph` — executes a no-code **logic graph** from the frontend builder
   (`parameters.graph`). Indicators (`price`/`sma`/`ema`/`rsi`/`constant`),
   conditions (`greater_than`/`less_than`/`crosses_above`/`crosses_below`),
-  logic (`and`/`or`/`not`) and signals (`enter_long`/`exit`) are interpreted by
-  `strategy_core.graph`. This is the shared, versioned strategy-JSON contract.
+  logic (`and`/`or`/`not`) and signals (`enter_long`/`enter_short`/`exit`) are
+  interpreted by `strategy_core.graph` (long, short and flat). This is the
+  shared, versioned strategy-JSON contract.
 
 ### Trading costs
 

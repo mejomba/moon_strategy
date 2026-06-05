@@ -93,6 +93,28 @@ class GraphExecutionTests(unittest.TestCase):
         self.assertIn(1, positions)  # goes long at some point
         self.assertTrue(all(p in (0, 1) for p in positions))
 
+    def test_enter_short_produces_short_positions(self):
+        graph = {
+            "nodes": [
+                {"id": "p", "type": "indicator", "op": "price", "params": {}},
+                {"id": "c", "type": "indicator", "op": "constant", "params": {"value": 100}},
+                {"id": "lt", "type": "condition", "op": "less_than", "params": {}},
+                {"id": "gt", "type": "condition", "op": "greater_than", "params": {}},
+                {"id": "short", "type": "signal", "op": "enter_short", "params": {}},
+                {"id": "exit", "type": "signal", "op": "exit", "params": {}},
+            ],
+            "edges": [
+                {"id": "1", "source": "p", "target": "lt", "targetPort": "a"},
+                {"id": "2", "source": "c", "target": "lt", "targetPort": "b"},
+                {"id": "3", "source": "p", "target": "gt", "targetPort": "a"},
+                {"id": "4", "source": "c", "target": "gt", "targetPort": "b"},
+                {"id": "5", "source": "lt", "target": "short", "targetPort": "in"},
+                {"id": "6", "source": "gt", "target": "exit", "targetPort": "in"},
+            ],
+        }
+        positions = evaluate_graph(graph, make_bars([110, 90, 80, 105]))
+        self.assertEqual(positions, [0, -1, -1, 0])
+
     def test_and_logic_combines_conditions(self):
         graph = {
             "nodes": [

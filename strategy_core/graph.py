@@ -28,12 +28,12 @@ from __future__ import annotations
 
 from strategy_core.data import Bar
 from strategy_core.indicators import ema, rsi, sma
-from strategy_core.strategies.base import FLAT, LONG
+from strategy_core.strategies.base import FLAT, LONG, SHORT
 
 NUMERIC_OPS = {"price", "sma", "ema", "rsi", "constant"}
 CONDITION_OPS = {"greater_than", "less_than", "crosses_above", "crosses_below"}
 LOGIC_OPS = {"and", "or", "not"}
-SIGNAL_OPS = {"enter_long", "exit"}
+SIGNAL_OPS = {"enter_long", "enter_short", "exit"}
 PRICE_SOURCES = {"open", "high", "low", "close"}
 
 # Series "kind" produced by each node type.
@@ -82,13 +82,15 @@ class _GraphInterpreter:
 
     def run(self) -> list[int]:
         signals = [n for n in self.nodes.values() if n.get("type") == "signal"]
-        enter_nodes = [n for n in signals if n.get("op") == "enter_long"]
-        if not enter_nodes:
+        long_nodes = [n for n in signals if n.get("op") == "enter_long"]
+        short_nodes = [n for n in signals if n.get("op") == "enter_short"]
+        if not long_nodes and not short_nodes:
             raise GraphValidationError(
-                "Graph needs at least one 'enter_long' signal node."
+                "Graph needs at least one 'enter_long' or 'enter_short' signal node."
             )
 
-        enters = [self._boolean_input(n) for n in enter_nodes]
+        enters_long = [self._boolean_input(n) for n in long_nodes]
+        enters_short = [self._boolean_input(n) for n in short_nodes]
         exits = [
             self._boolean_input(n) for n in signals if n.get("op") == "exit"
         ]
@@ -96,9 +98,13 @@ class _GraphInterpreter:
         positions: list[int] = []
         position = FLAT
         for i in range(self.n):
-            if position == FLAT and any(series[i] for series in enters):
-                position = LONG
-            elif position == LONG and any(series[i] for series in exits):
+            if position == FLAT:
+                if any(series[i] for series in enters_long):
+                    position = LONG
+                elif any(series[i] for series in enters_short):
+                    position = SHORT
+            elif any(series[i] for series in exits):
+                # An exit closes whichever side is open (long or short).
                 position = FLAT
             positions.append(position)
         return positions
