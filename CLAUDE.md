@@ -144,8 +144,8 @@ Never produce backtest results that silently ignore trading costs.
 - Run the test suite before committing.
 
 ```bash
-python manage.py test          # Django tests
-# (add backtest-core test command here once it exists, e.g. pytest)
+python manage.py test                                  # Django app tests
+python -m unittest discover -s strategy_core/tests -t . # backtest core (no Django)
 ```
 
 ---
@@ -153,10 +153,14 @@ python manage.py test          # Django tests
 ## 10. Common Commands
 
 ```bash
-python manage.py runserver     # dev server
-python manage.py migrate       # apply migrations
+python manage.py runserver      # dev server
+python manage.py migrate        # apply migrations
 python manage.py makemigrations
-python manage.py test          # run tests
+python manage.py test           # run Django tests
+python -m unittest discover -s strategy_core/tests -t .  # run backtest-core tests
+
+python manage.py seed_demo      # create + run demo strategies/backtests
+python manage.py run_backtest <id>  # run one backtest, print metrics + costs
 ```
 
 > Update this section as real commands/scripts are added to the project.

@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 
-from .engine.runner import run_backtest
 from .models import Backtest, Strategy, Trade
+from .runner import run_backtest
 
 
 class BacktestInline(admin.TabularInline):
@@ -22,7 +22,18 @@ class StrategyAdmin(admin.ModelAdmin):
 class TradeInline(admin.TabularInline):
     model = Trade
     extra = 0
-    fields = ("side", "quantity", "entry_time", "entry_price", "exit_price", "pnl")
+    fields = (
+        "side",
+        "quantity",
+        "entry_time",
+        "entry_price",
+        "exit_price",
+        "gross_pnl",
+        "commission",
+        "funding",
+        "pnl",
+    )
+    readonly_fields = fields
 
 
 @admin.register(Backtest)
@@ -39,6 +50,41 @@ class BacktestAdmin(admin.ModelAdmin):
     search_fields = ("symbol", "strategy__name")
     inlines = [TradeInline]
     actions = ["run_selected_backtests"]
+    fieldsets = (
+        (None, {"fields": ("strategy", "symbol", "timeframe", "start_date", "end_date")}),
+        ("Capital & costs", {
+            "fields": (
+                "initial_capital",
+                "commission_pct",
+                "slippage_bps",
+                "spread_bps",
+                "funding_rate",
+                "funding_interval_hours",
+            ),
+        }),
+        ("Results", {
+            "fields": (
+                "status",
+                "final_equity",
+                "total_return_pct",
+                "max_drawdown_pct",
+                "sharpe_ratio",
+                "win_rate_pct",
+                "error_message",
+                "completed_at",
+            ),
+        }),
+    )
+    readonly_fields = (
+        "status",
+        "final_equity",
+        "total_return_pct",
+        "max_drawdown_pct",
+        "sharpe_ratio",
+        "win_rate_pct",
+        "error_message",
+        "completed_at",
+    )
 
     @admin.action(description="Run selected backtests")
     def run_selected_backtests(self, request, queryset):

@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass
 from datetime import datetime
 
-from backtester.engine.portfolio import TradeRecord
+from strategy_core.portfolio import TradeRecord
 
 
 @dataclass
@@ -17,6 +17,8 @@ class PerformanceMetrics:
     sharpe_ratio: float
     win_rate_pct: float
     num_trades: int
+    total_commission: float = 0.0
+    total_funding: float = 0.0
 
 
 def compute_metrics(
@@ -25,7 +27,11 @@ def compute_metrics(
     periods_per_year: float,
     initial_capital: float,
 ) -> PerformanceMetrics:
-    """Summarise a backtest run into aggregate performance statistics."""
+    """Summarise a backtest run into aggregate performance statistics.
+
+    Returns are net of all trading costs because PnL is recorded net on each
+    trade and the costs are already reflected in the equity curve.
+    """
     equities = [e for _, e in equity_curve]
     final_equity = equities[-1] if equities else float(initial_capital)
 
@@ -40,6 +46,8 @@ def compute_metrics(
         sharpe_ratio=_sharpe_ratio(equities, periods_per_year),
         win_rate_pct=_win_rate_pct(trades),
         num_trades=len(trades),
+        total_commission=sum(t.commission for t in trades),
+        total_funding=sum(t.funding for t in trades),
     )
 
 

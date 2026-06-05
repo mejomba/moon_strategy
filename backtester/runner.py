@@ -13,13 +13,25 @@ from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 
-from backtester.engine.data import Bar, load_csv, synthetic_from_dates
-from backtester.engine.engine import BacktestEngine
-from backtester.engine.strategies import get_strategy
+from strategy_core.costs import CostModel
+from strategy_core.data import Bar, load_csv, synthetic_from_dates
+from strategy_core.engine import BacktestEngine
+from strategy_core.strategies import get_strategy
 
 
 def _to_decimal(value, places: str) -> Decimal:
     return Decimal(str(value)).quantize(Decimal(places))
+
+
+def build_cost_model(backtest) -> CostModel:
+    """Construct the engine cost model from a backtest's cost settings."""
+    return CostModel(
+        commission_pct=backtest.commission_pct,
+        slippage_bps=backtest.slippage_bps,
+        spread_bps=backtest.spread_bps,
+        funding_rate=backtest.funding_rate,
+        funding_interval_hours=backtest.funding_interval_hours,
+    )
 
 
 def load_bars(backtest) -> list[Bar]:
@@ -77,6 +89,7 @@ def run_backtest(backtest):
         engine = BacktestEngine(
             initial_capital=float(backtest.initial_capital),
             timeframe=backtest.timeframe,
+            cost_model=build_cost_model(backtest),
         )
         result = engine.run(bars, strategy)
     except Exception as exc:  # noqa: BLE001 - we persist then re-raise
@@ -105,6 +118,13 @@ def run_backtest(backtest):
                         if t.exit_price is not None
                         else None
                     ),
+                    gross_pnl=(
+                        _to_decimal(t.gross_pnl, "0.01")
+                        if t.gross_pnl is not None
+                        else None
+                    ),
+                    commission=_to_decimal(t.commission, "0.01"),
+                    funding=_to_decimal(t.funding, "0.01"),
                     pnl=_to_decimal(t.pnl, "0.01") if t.pnl is not None else None,
                 )
                 for t in result.trades

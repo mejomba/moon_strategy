@@ -2,7 +2,7 @@ from datetime import date
 
 from django.test import TestCase
 
-from backtester.engine.runner import run_backtest
+from backtester.runner import run_backtest
 from backtester.models import Backtest, Strategy, Trade
 
 
@@ -33,6 +33,26 @@ class RunnerTests(TestCase):
         self.assertIsNotNone(backtest.completed_at)
         # Metrics should be internally consistent with the trade log.
         self.assertGreaterEqual(backtest.trades.count(), 0)
+
+    def test_cost_fields_are_persisted_on_trades(self):
+        backtest = self._make_backtest()
+        # Force non-zero commission so trades carry a cost.
+        backtest.commission_pct = 0.001
+        backtest.save(update_fields=["commission_pct"])
+        run_backtest(backtest)
+
+        closed = backtest.trades.exclude(exit_time=None)
+        self.assertGreater(closed.count(), 0)
+        for trade in closed:
+            self.assertGreater(trade.commission, 0)
+            self.assertIsNotNone(trade.gross_pnl)
+            # Net pnl reconciles with gross minus costs (each field is rounded
+            # to cents independently, so allow a small reconciliation tolerance).
+            self.assertAlmostEqual(
+                float(trade.pnl),
+                float(trade.gross_pnl) - float(trade.commission) - float(trade.funding),
+                delta=0.02,
+            )
 
     def test_rerun_replaces_previous_trades(self):
         backtest = self._make_backtest()

@@ -9,7 +9,7 @@ from datetime import date
 
 from django.core.management.base import BaseCommand
 
-from backtester.engine.runner import run_backtest
+from backtester.runner import run_backtest
 from backtester.models import Backtest, Strategy
 
 

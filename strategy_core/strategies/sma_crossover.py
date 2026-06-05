@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from backtester.engine.data import Bar
-from backtester.engine.indicators import sma
-from backtester.engine.strategies.base import FLAT, LONG, SHORT, BaseStrategy
+from strategy_core.data import Bar
+from strategy_core.indicators import sma
+from strategy_core.strategies.base import FLAT, LONG, SHORT, BaseStrategy
 
 
 class SmaCrossoverStrategy(BaseStrategy):

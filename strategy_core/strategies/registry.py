@@ -7,9 +7,9 @@ engine strategy with the strategy's stored parameters.
 
 from __future__ import annotations
 
-from backtester.engine.strategies.base import BaseStrategy
-from backtester.engine.strategies.rsi import RsiStrategy
-from backtester.engine.strategies.sma_crossover import SmaCrossoverStrategy
+from strategy_core.strategies.base import BaseStrategy
+from strategy_core.strategies.rsi import RsiStrategy
+from strategy_core.strategies.sma_crossover import SmaCrossoverStrategy
 
 STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
     SmaCrossoverStrategy.name: SmaCrossoverStrategy,
