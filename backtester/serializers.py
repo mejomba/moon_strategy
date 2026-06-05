@@ -59,10 +59,20 @@ class TradeSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class QualityWarningSerializer(serializers.Serializer):
+    """A reliability/overfitting caveat about a backtest result."""
+
+    code = serializers.CharField(help_text="Stable warning identifier.")
+    severity = serializers.CharField(help_text='"info" or "warning".')
+    message = serializers.CharField(help_text="Human-readable explanation.")
+
+
 class BacktestSerializer(serializers.ModelSerializer):
-    """Read representation of a backtest run, including aggregate metrics."""
+    """Read representation of a backtest run, including aggregate metrics,
+    cost breakdown, and reliability warnings."""
 
     strategy_name = serializers.CharField(source="strategy.name", read_only=True)
+    warnings = QualityWarningSerializer(many=True, read_only=True)
 
     class Meta:
         model = Backtest
@@ -86,6 +96,9 @@ class BacktestSerializer(serializers.ModelSerializer):
             "max_drawdown_pct",
             "sharpe_ratio",
             "win_rate_pct",
+            "total_commission",
+            "total_funding",
+            "warnings",
             "error_message",
             "created_at",
             "completed_at",

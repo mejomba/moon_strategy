@@ -96,6 +96,26 @@ class BacktestApiTests(APITestCase):
         self.assertEqual(resp.data["count"], 1)
         self.assertEqual(resp.data["results"][0]["strategy"], self.strategy.id)
 
+    def test_response_includes_cost_breakdown_and_warnings(self):
+        payload = {
+            "strategy": self.strategy.id,
+            "symbol": "BTCUSDT",
+            "timeframe": "1d",
+            "start_date": "2023-01-01",
+            "end_date": "2023-12-31",
+            "initial_capital": 10000,
+        }
+        resp = self.client.post("/api/backtests/", payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # Cost breakdown is populated on completion.
+        self.assertIsNotNone(resp.data["total_commission"])
+        self.assertIsNotNone(resp.data["total_funding"])
+        # Every run carries at least the in-sample-only reliability warning.
+        codes = {w["code"] for w in resp.data["warnings"]}
+        self.assertIn("in_sample_only", codes)
+        for warning in resp.data["warnings"]:
+            self.assertIn(warning["severity"], {"info", "warning"})
+
     def test_detail_includes_equity_curve_but_list_does_not(self):
         payload = {
             "strategy": self.strategy.id,
