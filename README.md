@@ -124,6 +124,17 @@ Regenerate the committed schema file after changing the API:
 python manage.py spectacular --file openapi.yaml
 ```
 
+### CORS
+
+The Next.js frontend runs on a different origin, so API responses carry CORS
+headers (`django-cors-headers`). In `DEBUG`, any `localhost`/private-LAN origin
+(e.g. `http://192.168.1.24:3000`) is allowed automatically. In production, set
+the allowed origins explicitly:
+
+```bash
+DJANGO_CORS_ALLOWED_ORIGINS="https://app.example.com"
+```
+
 ## Testing
 
 ```bash
