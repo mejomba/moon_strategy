@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Third-party
+    "rest_framework",
+    "drf_spectacular",
     # Local apps
     "backtester",
 ]
@@ -120,6 +123,32 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
+
+
+# Django REST Framework
+# This repo is an API service (CLAUDE.md): all higher-level access is JSON over
+# DRF, and drf-spectacular generates the OpenAPI schema that the frontend repo
+# consumes to generate its typed client.
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 50,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Strategy Tester API",
+    "DESCRIPTION": (
+        "Backend API for Strategy Tester: manage strategies, run backtests, and "
+        "read simulated trades. This schema is the source of truth for the "
+        "frontend's generated client."
+    ),
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 
 # Static files (CSS, JavaScript, Images)
