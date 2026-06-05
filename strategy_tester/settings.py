@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Third-party
+    "corsheaders",
     "rest_framework",
     "drf_spectacular",
     # Local apps
@@ -54,6 +55,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # CORS must come before CommonMiddleware (and any middleware that can return
+    # a response) so the headers are attached to every API response.
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -155,6 +159,37 @@ SPECTACULAR_SETTINGS = {
         "BacktestStatusEnum": "backtester.models.BACKTEST_STATUS_CHOICES",
     },
 }
+
+
+# CORS (cross-origin requests from the Next.js frontend)
+# The frontend is served from a different origin (e.g. http://localhost:3000),
+# so the browser requires CORS headers on API responses. Configure the allowed
+# origins explicitly in production via DJANGO_CORS_ALLOWED_ORIGINS; in DEBUG we
+# also allow any localhost / private-LAN origin so `0.0.0.0` + a machine IP
+# (e.g. http://192.168.1.24:3000) works out of the box.
+CORS_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get(
+        "DJANGO_CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000",
+    ).split(",")
+    if o.strip()
+]
+
+# Only the API needs CORS; no need to expose it on admin/other paths.
+CORS_URLS_REGEX = r"^/api/.*$"
+
+if DEBUG:
+    # localhost / 127.0.0.1 / 10.x / 192.168.x.x / 172.16–31.x on any port.
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^http://(localhost|127\.0\.0\.1|\[::1\]"
+        r"|10(\.\d{1,3}){3}"
+        r"|192\.168(\.\d{1,3}){2}"
+        r"|172\.(1[6-9]|2\d|3[01])(\.\d{1,3}){2}):\d+$"
+    ]
+
+# Trust the same origins for CSRF (needed once session-based auth is added).
+CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
 
 
 # Static files (CSS, JavaScript, Images)

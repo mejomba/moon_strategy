@@ -162,3 +162,21 @@ class SchemaApiTests(APITestCase):
     def test_openapi_schema_is_served(self):
         resp = self.client.get("/api/schema/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+
+class CorsTests(APITestCase):
+    def test_api_response_allows_the_frontend_origin(self):
+        resp = self.client.get(
+            "/api/strategies/", HTTP_ORIGIN="http://localhost:3000"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            resp.headers.get("Access-Control-Allow-Origin"),
+            "http://localhost:3000",
+        )
+
+    def test_disallowed_origin_gets_no_cors_header(self):
+        resp = self.client.get(
+            "/api/strategies/", HTTP_ORIGIN="http://evil.example.com"
+        )
+        self.assertNotIn("Access-Control-Allow-Origin", resp.headers)
