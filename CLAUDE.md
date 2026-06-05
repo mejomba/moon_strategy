@@ -28,18 +28,17 @@ ask before proceeding.
 
 ## 2. Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Backend / Web | Python, **Django** |
-| Frontend | **Vanilla JavaScript** (no heavy frameworks), HTML, CSS |
-| Forex bridge | **MQL5** Expert Advisor + Python bridge |
-| Backtest core | Pure **Python** (must stay framework-independent) |
-| Historical data | Time-series oriented storage |
-| Strategy format | Intermediate **JSON / logic graph** |
+| Layer | Technology                                                                                                                                                                 |
+|---|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Backend / Web | Python, **Django**                                                                                                                                                         |
+| Frontend | **NextJS + with type script**, HTML, CSS (individual project, repository name is: [mejomba/moon_strategy_web_client](https://github.com/mejomba/moon_strategy_web_client)) |
+| Forex bridge | **MQL5** Expert Advisor + Python bridge                                                                                                                                    |
+| Backtest core | Pure **Python** (must stay framework-independent)                                                                                                                          |
+| Historical data | Time-series oriented storage                                                                                                                                               |
+| Strategy format | Intermediate **JSON / logic graph**                                                                                                                                        |
 
 Constraints:
-- Frontend is **Vanilla JS** by design. Do **not** introduce React/Vue/etc. unless
-  explicitly asked.
+- Frontend is **React NextJS** by design. use UI/UX knowledge for make it useful and simple  
 - The **backtest engine core must be a pure Python package, independent of Django**, so
   it can be tested and reused in isolation.
 
@@ -128,11 +127,11 @@ Never produce backtest results that silently ignore trading costs.
 
 ## 8. Code Conventions
 
-- Python: follow PEP 8; use type hints; keep functions small and testable.
+- Python: follow PEP 8; use type hints and doc string; keep functions small and testable.
 - Django: organize by focused apps (e.g. `marketdata`, `backtest`, `strategies`,
   `execution`, `accounts`). Keep business logic out of views where reasonable.
 - Keep the **backtest core decoupled** from Django (plain Python package).
-- Vanilla JS: modular files, no global namespace pollution, clear separation between
+- moon_strategy_web_client: modular files, no global namespace pollution, clear separation between
   UI and the strategy-JSON model.
 - Names, comments, and commit messages in **English**.
 
