@@ -10,8 +10,16 @@ class Strategy(models.Model):
         ACTIVE = "active", "Active"
         ARCHIVED = "archived", "Archived"
 
+    class Kind(models.TextChoices):
+        SMA_CROSSOVER = "sma_crossover", "SMA Crossover"
+        RSI = "rsi", "RSI"
+
     name = models.CharField(max_length=120, unique=True)
     description = models.TextField(blank=True)
+    # Which engine implementation backs this strategy (see engine.strategies).
+    kind = models.CharField(
+        max_length=32, choices=Kind.choices, default=Kind.SMA_CROSSOVER
+    )
     # Free-form parameters for the strategy (e.g. indicator periods, thresholds).
     parameters = models.JSONField(default=dict, blank=True)
     status = models.CharField(
@@ -57,6 +65,24 @@ class Backtest(models.Model):
         max_digits=18, decimal_places=2, default=10000
     )
 
+    # Trading-cost assumptions applied by the engine (CLAUDE.md §7). Defaults
+    # approximate a liquid crypto pair with taker fees.
+    commission_pct = models.FloatField(
+        default=0.0004, help_text="Taker fee per side, fraction (0.0004 = 0.04%)"
+    )
+    slippage_bps = models.FloatField(
+        default=1.0, help_text="Adverse fill per side, basis points"
+    )
+    spread_bps = models.FloatField(
+        default=1.0, help_text="Half-spread crossed per side, basis points"
+    )
+    funding_rate = models.FloatField(
+        default=0.0, help_text="Funding per interval, fraction (longs pay if > 0)"
+    )
+    funding_interval_hours = models.FloatField(
+        default=8.0, help_text="Hours between funding charges"
+    )
+
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.PENDING
     )
@@ -98,6 +124,12 @@ class Trade(models.Model):
     exit_price = models.DecimalField(
         max_digits=18, decimal_places=8, null=True, blank=True
     )
+    # PnL is recorded net of costs; gross_pnl/commission/funding break it down.
+    gross_pnl = models.DecimalField(
+        max_digits=18, decimal_places=2, null=True, blank=True
+    )
+    commission = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    funding = models.DecimalField(max_digits=18, decimal_places=2, default=0)
     pnl = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
 
     class Meta:
