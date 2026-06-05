@@ -43,17 +43,22 @@
 
     <h2>Recent backtests</h2>
     <table>
-        <thead><tr><th>Strategy</th><th>Symbol</th><th>Status</th><th>Return %</th></tr></thead>
+        <thead><tr>
+            <th>Strategy</th><th>Symbol</th><th>Status</th>
+            <th>Return %</th><th>Max DD %</th><th>Sharpe</th>
+        </tr></thead>
         <tbody>
         {% for bt in recent_backtests %}
             <tr>
                 <td>{{ bt.strategy.name }}</td>
                 <td>{{ bt.symbol }}</td>
                 <td>{{ bt.get_status_display }}</td>
-                <td>{{ bt.total_return_pct|default:"—" }}</td>
+                <td>{{ bt.total_return_pct|floatformat:2|default:"—" }}</td>
+                <td>{{ bt.max_drawdown_pct|floatformat:2|default:"—" }}</td>
+                <td>{{ bt.sharpe_ratio|floatformat:2|default:"—" }}</td>
             </tr>
         {% empty %}
-            <tr><td colspan="4" class="muted">No backtests yet.</td></tr>
+            <tr><td colspan="6" class="muted">No backtests yet.</td></tr>
         {% endfor %}
         </tbody>
     </table>
