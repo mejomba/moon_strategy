@@ -71,7 +71,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Backtest'
+                $ref: '#/components/schemas/BacktestDetail'
           description: ''
   /api/backtests/{id}/:
     get:
@@ -100,7 +100,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Backtest'
+                $ref: '#/components/schemas/BacktestDetail'
           description: ''
   /api/backtests/{id}/trades/:
     get:
@@ -476,6 +476,140 @@ components:
       - start_date
       - strategy
       - symbol
+    BacktestDetail:
+      type: object
+      description: |-
+        Backtest read representation including the full equity curve.
+
+        Used for retrieve/create responses; the list endpoint uses the lighter
+        :class:`BacktestSerializer` to avoid shipping the curve for every row.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        strategy:
+          type: integer
+          readOnly: true
+        strategy_name:
+          type: string
+          readOnly: true
+        symbol:
+          type: string
+          readOnly: true
+          description: Instrument ticker, e.g. BTCUSDT
+        timeframe:
+          type: string
+          readOnly: true
+          description: Candle timeframe, e.g. 1m, 1h, 1d
+        start_date:
+          type: string
+          format: date
+          readOnly: true
+        end_date:
+          type: string
+          format: date
+          readOnly: true
+        initial_capital:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        commission_pct:
+          type: number
+          format: double
+          readOnly: true
+          description: Taker fee per side, fraction (0.0004 = 0.04%)
+        slippage_bps:
+          type: number
+          format: double
+          readOnly: true
+          description: Adverse fill per side, basis points
+        spread_bps:
+          type: number
+          format: double
+          readOnly: true
+          description: Half-spread crossed per side, basis points
+        funding_rate:
+          type: number
+          format: double
+          readOnly: true
+          description: Funding per interval, fraction (longs pay if > 0)
+        funding_interval_hours:
+          type: number
+          format: double
+          readOnly: true
+          description: Hours between funding charges
+        status:
+          allOf:
+          - $ref: '#/components/schemas/BacktestStatusEnum'
+          readOnly: true
+        final_equity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        total_return_pct:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+        max_drawdown_pct:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+        sharpe_ratio:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+        win_rate_pct:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+        error_message:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        equity_curve:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquityPoint'
+          readOnly: true
+      required:
+      - commission_pct
+      - completed_at
+      - created_at
+      - end_date
+      - equity_curve
+      - error_message
+      - final_equity
+      - funding_interval_hours
+      - funding_rate
+      - id
+      - initial_capital
+      - max_drawdown_pct
+      - sharpe_ratio
+      - slippage_bps
+      - spread_bps
+      - start_date
+      - status
+      - strategy
+      - strategy_name
+      - symbol
+      - timeframe
+      - total_return_pct
+      - win_rate_pct
     BacktestStatusEnum:
       enum:
       - pending
@@ -488,6 +622,21 @@ components:
         * `running` - Running
         * `completed` - Completed
         * `failed` - Failed
+    EquityPoint:
+      type: object
+      description: One sample of portfolio value on the equity curve.
+      properties:
+        t:
+          type: string
+          format: date-time
+          description: Sample timestamp (ISO-8601).
+        equity:
+          type: number
+          format: double
+          description: Portfolio value at this time.
+      required:
+      - equity
+      - t
     KindEnum:
       enum:
       - sma_crossover

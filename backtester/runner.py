@@ -137,7 +137,26 @@ def run_backtest(backtest):
         backtest.max_drawdown_pct = m.max_drawdown_pct
         backtest.sharpe_ratio = m.sharpe_ratio
         backtest.win_rate_pct = m.win_rate_pct
+        backtest.equity_curve = _serialize_equity_curve(result.equity_curve)
         backtest.status = Backtest.Status.COMPLETED
         backtest.completed_at = timezone.now()
         backtest.save()
     return backtest
+
+
+# Cap stored points so long (e.g. minute-resolution) runs stay light to fetch
+# and chart; the curve is downsampled evenly, always keeping the last point.
+MAX_EQUITY_POINTS = 1500
+
+
+def _serialize_equity_curve(curve) -> list[dict]:
+    """Convert the engine's ``[(datetime, equity), ...]`` into JSON points."""
+    points = curve or []
+    step = max(1, len(points) // MAX_EQUITY_POINTS)
+    sampled = points[::step]
+    if points and sampled[-1] is not points[-1]:
+        sampled.append(points[-1])
+    return [
+        {"t": when.isoformat(), "equity": round(float(equity), 2)}
+        for when, equity in sampled
+    ]

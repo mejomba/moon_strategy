@@ -93,6 +93,27 @@ class BacktestSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class EquityPointSerializer(serializers.Serializer):
+    """One sample of portfolio value on the equity curve."""
+
+    t = serializers.DateTimeField(help_text="Sample timestamp (ISO-8601).")
+    equity = serializers.FloatField(help_text="Portfolio value at this time.")
+
+
+class BacktestDetailSerializer(BacktestSerializer):
+    """Backtest read representation including the full equity curve.
+
+    Used for retrieve/create responses; the list endpoint uses the lighter
+    :class:`BacktestSerializer` to avoid shipping the curve for every row.
+    """
+
+    equity_curve = EquityPointSerializer(many=True, read_only=True)
+
+    class Meta(BacktestSerializer.Meta):
+        fields = BacktestSerializer.Meta.fields + ["equity_curve"]
+        read_only_fields = fields
+
+
 class BacktestCreateSerializer(serializers.ModelSerializer):
     """Write payload to queue a backtest run.
 
