@@ -1,7 +1,10 @@
-# CLAUDE.md
+# CLAUDE.md — Backend (Strategy Tester API)
 
-This file gives Claude Code the context and rules for working in this repository.
-Read it fully before making any change.
+This file gives Claude Code the context and rules for working in the **backend**
+repository. Read it fully before making any change.
+
+> The frontend lives in a **separate Next.js repository**. This repo is the **API
+> backend only** — it serves JSON, not HTML pages.
 
 ---
 
@@ -26,19 +29,20 @@ ask before proceeding.
 
 ---
 
-## 2. Tech Stack
+## 2. Tech Stack (this repo)
 
-| Layer | Technology                                                                                                                                                                 |
-|---|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Backend / Web | Python, **Django**                                                                                                                                                         |
-| Frontend | **NextJS + with type script**, HTML, CSS (individual project, repository name is: [mejomba/moon_strategy_web_client](https://github.com/mejomba/moon_strategy_web_client)) |
-| Forex bridge | **MQL5** Expert Advisor + Python bridge                                                                                                                                    |
-| Backtest core | Pure **Python** (must stay framework-independent)                                                                                                                          |
-| Historical data | Time-series oriented storage                                                                                                                                               |
-| Strategy format | Intermediate **JSON / logic graph**                                                                                                                                        |
+| Layer | Technology |
+|---|---|
+| Web / API | Python, **Django** + **Django REST Framework (DRF)** |
+| API schema | **OpenAPI** via `drf-spectacular` (source of truth for the frontend) |
+| Backtest core | Pure **Python** package, **independent of Django** |
+| Forex bridge | **MQL5** Expert Advisor + Python bridge |
+| Historical data | Time-series oriented storage |
+| Strategy format | Intermediate **JSON / logic graph** (shared with frontend) |
 
 Constraints:
-- Frontend is **React NextJS** by design. use UI/UX knowledge for make it useful and simple  
+- This backend is an **API service**. Do **not** add server-rendered HTML templates or
+  build UI here — the UI is the Next.js repo's job.
 - The **backtest engine core must be a pure Python package, independent of Django**, so
   it can be tested and reused in isolation.
 
@@ -56,8 +60,8 @@ These come from the product's legal and risk requirements. They are non-negotiab
 4. **Paper Trading must come before any live execution.** Do not wire a strategy to live
    orders without a working simulated path first.
 5. Treat all secrets (API keys, credentials) as sensitive: never hard-code, never log,
-   never commit them. Use environment variables / Django settings + `.env` (gitignored).
-6. Surface clear legal disclaimers in any user-facing trading flow.
+   never commit them. Use environment variables + `.env` (gitignored).
+6. Expose clear legal disclaimers through the API where trading flows require them.
 
 If a requested change would conflict with any rule above, **stop and flag it** instead of
 implementing it.
@@ -76,27 +80,43 @@ never to a specific market directly.
 
 ### b) Intermediate Strategy Language
 A single intermediate representation (**JSON / logic graph**) that:
-- is simple enough for the no-code visual builder to produce, and
-- can be **executed by the Python backtest engine**, and
+- is produced by the Next.js no-code visual builder,
+- is **executed by the Python backtest engine** (this repo), and
 - can be **translated to MQL5** for forex live execution.
 
-Keep this format as the single source of truth for a strategy. Changes to it ripple
-everywhere — design it carefully and version it.
+This format is the **single source of truth for a strategy** and is **shared with the
+frontend repo**. Keep its schema versioned. Any change here must be coordinated with the
+frontend — flag it explicitly.
 
 ---
 
-## 5. Scope
+## 5. Frontend/Backend Contract (cross-repo)
 
-**In scope:** multi-timeframe historical data, no-code visual strategy builder, backtest
-engine + performance reporting, paper trading then live execution, crypto via API + MT5
-via Expert Advisor, user/subscription/billing.
+The Next.js frontend is a separate repo and consumes this API.
+
+- This repo owns the **API contract**. Generate/maintain the **OpenAPI schema**
+  (`drf-spectacular`) so the frontend can generate its types/client from it.
+- When you add or change an endpoint: update the serializer, the schema, and note the
+  change so the frontend client can be updated in its own repo.
+- Keep the **strategy JSON schema** byte-for-byte compatible with what the frontend
+  builder produces.
+- **Do not** put frontend code in this repo, and do not assume direct file access to the
+  frontend — communicate through the API contract.
+
+---
+
+## 6. Scope
+
+**In scope:** multi-timeframe historical data, backtest engine + performance reporting
+(API), paper trading then live execution, crypto via API + MT5 via Expert Advisor,
+user/subscription/billing, serving the no-code builder's needs via API.
 
 **Out of scope (phase 1):** holding user funds (ever), strategy marketplace & copy
 trading, dedicated mobile app, stocks/options markets. Do not build these unless asked.
 
 ---
 
-## 6. Roadmap — Build in Phase Order
+## 7. Roadmap — Build in Phase Order
 
 Do not jump ahead. **Phase 1 is crypto-only** (simpler, cheaper API). Forex/MT5 comes
 later, after the core is stable.
@@ -104,7 +124,7 @@ later, after the core is stable.
 | Phase | Months | Focus |
 |---|---|---|
 | 1. Backtest core | 1–5 | Backtest engine + data management + metrics (**crypto only**) |
-| 2. No-code builder | 5–9 | Visual builder + intermediate JSON + reporting |
+| 2. No-code builder | 5–9 | Intermediate JSON + reporting API (UI built in frontend repo) |
 | 3. Crypto live | 9–12 | Exchange connection + paper trading + live with risk management |
 | 4. Forex / MT5 | 12–15 | MT5 adapter + EA + MQL5 translator |
 | 5. Polish & growth | 15–18 | Optimizer, walk-forward, marketplace |
@@ -113,7 +133,7 @@ When asked for a feature that belongs to a later phase, point this out before bu
 
 ---
 
-## 7. Backtest Quality Requirements (product differentiator)
+## 8. Backtest Quality Requirements (product differentiator)
 
 Naive backtests are misleading and must be avoided. The engine must model:
 - Realistic **slippage, commission, spread, and overnight swap**.
@@ -125,50 +145,53 @@ Never produce backtest results that silently ignore trading costs.
 
 ---
 
-## 8. Code Conventions
+## 9. Code Conventions
 
-- Python: follow PEP 8; use type hints and doc string; keep functions small and testable.
+- Python: follow PEP 8; use type hints; keep functions small and testable.
 - Django: organize by focused apps (e.g. `marketdata`, `backtest`, `strategies`,
-  `execution`, `accounts`). Keep business logic out of views where reasonable.
+  `execution`, `accounts`). Keep business logic out of views/serializers where reasonable.
 - Keep the **backtest core decoupled** from Django (plain Python package).
-- moon_strategy_web_client: modular files, no global namespace pollution, clear separation between
-  UI and the strategy-JSON model.
+- All API responses are JSON; use DRF serializers; keep the OpenAPI schema in sync.
 - Names, comments, and commit messages in **English**.
 
 ---
 
-## 9. Testing
+## 10. Testing
 
 - Write tests for every non-trivial change, especially for the **backtest engine** and
   **risk-management logic** — bugs there are financially costly.
 - Run the test suite before committing.
 
 ```bash
-python manage.py test          # Django tests
+python manage.py test          # Django/DRF tests
 # (add backtest-core test command here once it exists, e.g. pytest)
 ```
 
 ---
 
-## 10. Common Commands
+## 11. Common Commands
 
 ```bash
-python manage.py runserver     # dev server
-python manage.py migrate       # apply migrations
+python manage.py runserver     # dev server (API)
+python manage.py migrate
 python manage.py makemigrations
-python manage.py test          # run tests
+python manage.py spectacular --file schema.yml   # regenerate OpenAPI schema
+python manage.py test
 ```
 
-> Update this section as real commands/scripts are added to the project.
+> Update this section as real commands/scripts are added.
 
 ---
 
-## 11. Workflow Expectations for Claude Code
+## 12. Workflow Expectations for Claude Code
 
-1. **Plan first** for anything non-trivial (especially the two core challenges in §4):
-   explain the approach before writing code.
+1. **Plan first** for anything non-trivial (especially §4): explain the approach before
+   writing code.
 2. Implement in **small, focused steps** — one task at a time.
 3. **Write/extend tests** for the change.
-4. **Commit** with a clear, descriptive message after a working unit of work.
-5. Respect §3 safety rules absolutely; flag conflicts instead of working around them.
-6. Stay within the current roadmap phase unless told otherwise.
+4. **Commit in this repo only** with a clear English message. Do not mix backend and
+   frontend work in one commit.
+5. When a change affects the API contract or strategy JSON, **call it out** so the
+   frontend repo can be updated to match.
+6. Respect §3 safety rules absolutely; flag conflicts instead of working around them.
+7. Stay within the current roadmap phase unless told otherwise.
