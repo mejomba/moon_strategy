@@ -10,8 +10,16 @@ class Strategy(models.Model):
         ACTIVE = "active", "Active"
         ARCHIVED = "archived", "Archived"
 
+    class Kind(models.TextChoices):
+        SMA_CROSSOVER = "sma_crossover", "SMA Crossover"
+        RSI = "rsi", "RSI"
+
     name = models.CharField(max_length=120, unique=True)
     description = models.TextField(blank=True)
+    # Which engine implementation backs this strategy (see engine.strategies).
+    kind = models.CharField(
+        max_length=32, choices=Kind.choices, default=Kind.SMA_CROSSOVER
+    )
     # Free-form parameters for the strategy (e.g. indicator periods, thresholds).
     parameters = models.JSONField(default=dict, blank=True)
     status = models.CharField(
