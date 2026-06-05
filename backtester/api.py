@@ -15,6 +15,7 @@ from backtester.models import Backtest, Strategy
 from backtester.runner import run_backtest
 from backtester.serializers import (
     BacktestCreateSerializer,
+    BacktestDetailSerializer,
     BacktestSerializer,
     StrategySerializer,
     TradeSerializer,
@@ -47,6 +48,8 @@ class BacktestViewSet(
     def get_serializer_class(self):
         if self.action == "create":
             return BacktestCreateSerializer
+        if self.action == "retrieve":
+            return BacktestDetailSerializer
         return BacktestSerializer
 
     def get_queryset(self):
@@ -72,7 +75,7 @@ class BacktestViewSet(
 
     @extend_schema(
         request=BacktestCreateSerializer,
-        responses={201: BacktestSerializer},
+        responses={201: BacktestDetailSerializer},
     )
     def create(self, request, *args, **kwargs):
         write = self.get_serializer(data=request.data)
@@ -87,7 +90,9 @@ class BacktestViewSet(
             pass
 
         backtest.refresh_from_db()
-        read = BacktestSerializer(backtest, context=self.get_serializer_context())
+        read = BacktestDetailSerializer(
+            backtest, context=self.get_serializer_context()
+        )
         return Response(read.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(responses=TradeSerializer(many=True))

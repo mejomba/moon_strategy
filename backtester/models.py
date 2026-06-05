@@ -95,6 +95,11 @@ class Backtest(models.Model):
     sharpe_ratio = models.FloatField(null=True, blank=True)
     win_rate_pct = models.FloatField(null=True, blank=True)
 
+    # Portfolio value sampled per bar, for charting the equity curve. Stored as
+    # a list of {"t": ISO-8601 timestamp, "equity": float}; empty until the run
+    # completes. May be downsampled for long runs (see runner).
+    equity_curve = models.JSONField(default=list, blank=True)
+
     error_message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -137,3 +142,10 @@ class Trade(models.Model):
 
     def __str__(self):
         return f"{self.get_side_display()} {self.quantity} @ {self.entry_price}"
+
+
+# Module-level choice aliases so drf-spectacular's ENUM_NAME_OVERRIDES can import
+# them by path and pin stable OpenAPI enum component names (the Backtest status
+# set is shared across the list/detail serializers, which otherwise collides).
+STRATEGY_STATUS_CHOICES = Strategy.Status.choices
+BACKTEST_STATUS_CHOICES = Backtest.Status.choices

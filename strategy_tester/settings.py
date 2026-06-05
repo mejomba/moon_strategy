@@ -148,6 +148,12 @@ SPECTACULAR_SETTINGS = {
     ),
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Give the two distinct "status" choice sets stable, readable component
+    # names (otherwise they collide and get hash-suffixed names that churn).
+    "ENUM_NAME_OVERRIDES": {
+        "StrategyStatusEnum": "backtester.models.STRATEGY_STATUS_CHOICES",
+        "BacktestStatusEnum": "backtester.models.BACKTEST_STATUS_CHOICES",
+    },
 }
 
 

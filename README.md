@@ -104,7 +104,7 @@ the source of truth the frontend consumes to generate its typed client.
 | `GET/POST /api/strategies/` | List / create strategies |
 | `GET/PATCH/DELETE /api/strategies/{id}/` | Retrieve / update / delete a strategy |
 | `GET/POST /api/backtests/` | List / create runs (`POST` runs synchronously) |
-| `GET /api/backtests/{id}/` | Retrieve a run with its metrics |
+| `GET /api/backtests/{id}/` | Retrieve a run with its metrics + equity curve |
 | `GET /api/backtests/{id}/trades/` | Trade log for a run |
 | `GET /api/schema/` | OpenAPI 3 schema |
 | `GET /api/schema/swagger-ui/` | Swagger UI |
