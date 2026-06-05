@@ -1,0 +1,734 @@
+openapi: 3.0.3
+info:
+  title: Strategy Tester API
+  version: 0.1.0
+  description: 'Backend API for Strategy Tester: manage strategies, run backtests,
+    and read simulated trades. This schema is the source of truth for the frontend''s
+    generated client.'
+paths:
+  /api/backtests/:
+    get:
+      operationId: backtests_list
+      description: |-
+        List/inspect backtests and queue new runs.
+
+        Creating a backtest executes the run synchronously and returns the finished
+        record. If the engine fails, the record is returned with ``status=failed``
+        and an ``error_message`` rather than surfacing a 500.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: strategy
+        schema:
+          type: integer
+        description: Filter runs by strategy id.
+      tags:
+      - backtests
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBacktestList'
+          description: ''
+    post:
+      operationId: backtests_create
+      description: |-
+        List/inspect backtests and queue new runs.
+
+        Creating a backtest executes the run synchronously and returns the finished
+        record. If the engine fails, the record is returned with ``status=failed``
+        and an ``error_message`` rather than surfacing a 500.
+      tags:
+      - backtests
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BacktestCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BacktestCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BacktestCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backtest'
+          description: ''
+  /api/backtests/{id}/:
+    get:
+      operationId: backtests_retrieve
+      description: |-
+        List/inspect backtests and queue new runs.
+
+        Creating a backtest executes the run synchronously and returns the finished
+        record. If the engine fails, the record is returned with ``status=failed``
+        and an ``error_message`` rather than surfacing a 500.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this backtest.
+        required: true
+      tags:
+      - backtests
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backtest'
+          description: ''
+  /api/backtests/{id}/trades/:
+    get:
+      operationId: backtests_trades_list
+      description: Return the trade log produced by this backtest.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this backtest.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - backtests
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTradeList'
+          description: ''
+  /api/strategies/:
+    get:
+      operationId: strategies_list
+      description: CRUD for strategy definitions.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - strategies
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStrategyList'
+          description: ''
+    post:
+      operationId: strategies_create
+      description: CRUD for strategy definitions.
+      tags:
+      - strategies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Strategy'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Strategy'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Strategy'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Strategy'
+          description: ''
+  /api/strategies/{id}/:
+    get:
+      operationId: strategies_retrieve
+      description: CRUD for strategy definitions.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this strategy.
+        required: true
+      tags:
+      - strategies
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Strategy'
+          description: ''
+    put:
+      operationId: strategies_update
+      description: CRUD for strategy definitions.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this strategy.
+        required: true
+      tags:
+      - strategies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Strategy'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Strategy'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Strategy'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Strategy'
+          description: ''
+    patch:
+      operationId: strategies_partial_update
+      description: CRUD for strategy definitions.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this strategy.
+        required: true
+      tags:
+      - strategies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStrategy'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStrategy'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStrategy'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Strategy'
+          description: ''
+    delete:
+      operationId: strategies_destroy
+      description: CRUD for strategy definitions.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this strategy.
+        required: true
+      tags:
+      - strategies
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    Backtest:
+      type: object
+      description: Read representation of a backtest run, including aggregate metrics.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        strategy:
+          type: integer
+          readOnly: true
+        strategy_name:
+          type: string
+          readOnly: true
+        symbol:
+          type: string
+          readOnly: true
+          description: Instrument ticker, e.g. BTCUSDT
+        timeframe:
+          type: string
+          readOnly: true
+          description: Candle timeframe, e.g. 1m, 1h, 1d
+        start_date:
+          type: string
+          format: date
+          readOnly: true
+        end_date:
+          type: string
+          format: date
+          readOnly: true
+        initial_capital:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        commission_pct:
+          type: number
+          format: double
+          readOnly: true
+          description: Taker fee per side, fraction (0.0004 = 0.04%)
+        slippage_bps:
+          type: number
+          format: double
+          readOnly: true
+          description: Adverse fill per side, basis points
+        spread_bps:
+          type: number
+          format: double
+          readOnly: true
+          description: Half-spread crossed per side, basis points
+        funding_rate:
+          type: number
+          format: double
+          readOnly: true
+          description: Funding per interval, fraction (longs pay if > 0)
+        funding_interval_hours:
+          type: number
+          format: double
+          readOnly: true
+          description: Hours between funding charges
+        status:
+          allOf:
+          - $ref: '#/components/schemas/BacktestStatusEnum'
+          readOnly: true
+        final_equity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        total_return_pct:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+        max_drawdown_pct:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+        sharpe_ratio:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+        win_rate_pct:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+        error_message:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - commission_pct
+      - completed_at
+      - created_at
+      - end_date
+      - error_message
+      - final_equity
+      - funding_interval_hours
+      - funding_rate
+      - id
+      - initial_capital
+      - max_drawdown_pct
+      - sharpe_ratio
+      - slippage_bps
+      - spread_bps
+      - start_date
+      - status
+      - strategy
+      - strategy_name
+      - symbol
+      - timeframe
+      - total_return_pct
+      - win_rate_pct
+    BacktestCreate:
+      type: object
+      description: |-
+        Write payload to queue a backtest run.
+
+        Only the run configuration is accepted; status, metrics and trades are
+        produced by the engine. Cost fields are optional and fall back to the
+        model's realistic defaults (CLAUDE.md §7) — results are never cost-free.
+      properties:
+        strategy:
+          type: integer
+        symbol:
+          type: string
+          description: Instrument ticker, e.g. BTCUSDT
+          maxLength: 32
+        timeframe:
+          type: string
+          description: Candle timeframe, e.g. 1m, 1h, 1d
+          maxLength: 8
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        initial_capital:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        commission_pct:
+          type: number
+          format: double
+          description: Taker fee per side, fraction (0.0004 = 0.04%)
+        slippage_bps:
+          type: number
+          format: double
+          description: Adverse fill per side, basis points
+        spread_bps:
+          type: number
+          format: double
+          description: Half-spread crossed per side, basis points
+        funding_rate:
+          type: number
+          format: double
+          description: Funding per interval, fraction (longs pay if > 0)
+        funding_interval_hours:
+          type: number
+          format: double
+          description: Hours between funding charges
+      required:
+      - end_date
+      - start_date
+      - strategy
+      - symbol
+    BacktestStatusEnum:
+      enum:
+      - pending
+      - running
+      - completed
+      - failed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `running` - Running
+        * `completed` - Completed
+        * `failed` - Failed
+    KindEnum:
+      enum:
+      - sma_crossover
+      - rsi
+      type: string
+      description: |-
+        * `sma_crossover` - SMA Crossover
+        * `rsi` - RSI
+    PaginatedBacktestList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Backtest'
+    PaginatedStrategyList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Strategy'
+    PaginatedTradeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Trade'
+    PatchedStrategy:
+      type: object
+      description: |-
+        A strategy definition.
+
+        ``parameters`` is a free-form JSON object. It carries the engine-facing
+        parameters (e.g. ``fast``/``slow``) at the top level plus a reserved
+        ``_meta`` envelope (schema version + logic graph) written by the frontend.
+        The backtest engine reads only the keys it knows and ignores the rest.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        description:
+          type: string
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        parameters: {}
+        status:
+          $ref: '#/components/schemas/StrategyStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    SideEnum:
+      enum:
+      - long
+      - short
+      type: string
+      description: |-
+        * `long` - Long
+        * `short` - Short
+    Strategy:
+      type: object
+      description: |-
+        A strategy definition.
+
+        ``parameters`` is a free-form JSON object. It carries the engine-facing
+        parameters (e.g. ``fast``/``slow``) at the top level plus a reserved
+        ``_meta`` envelope (schema version + logic graph) written by the frontend.
+        The backtest engine reads only the keys it knows and ignores the rest.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        description:
+          type: string
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        parameters: {}
+        status:
+          $ref: '#/components/schemas/StrategyStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+    StrategyStatusEnum:
+      enum:
+      - draft
+      - active
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `archived` - Archived
+    Trade:
+      type: object
+      description: An individual simulated trade. PnL fields are net of trading costs.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        backtest:
+          type: integer
+          readOnly: true
+        side:
+          allOf:
+          - $ref: '#/components/schemas/SideEnum'
+          readOnly: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,8})?$
+          readOnly: true
+        entry_time:
+          type: string
+          format: date-time
+          readOnly: true
+        entry_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,8})?$
+          readOnly: true
+        exit_time:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        exit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,8})?$
+          readOnly: true
+          nullable: true
+        gross_pnl:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        commission:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        funding:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        pnl:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+      required:
+      - backtest
+      - commission
+      - entry_price
+      - entry_time
+      - exit_price
+      - exit_time
+      - funding
+      - gross_pnl
+      - id
+      - pnl
+      - quantity
+      - side
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

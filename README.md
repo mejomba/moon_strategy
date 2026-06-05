@@ -94,6 +94,31 @@ python manage.py run_backtest <id>
 Backtests can also be run from the Django admin via the
 "Run selected backtests" action on the Backtest list.
 
+## REST API
+
+This repo is an **API service** (Django REST Framework). The OpenAPI schema is
+the source of truth the frontend consumes to generate its typed client.
+
+| Endpoint | Description |
+| --- | --- |
+| `GET/POST /api/strategies/` | List / create strategies |
+| `GET/PATCH/DELETE /api/strategies/{id}/` | Retrieve / update / delete a strategy |
+| `GET/POST /api/backtests/` | List / create runs (`POST` runs synchronously) |
+| `GET /api/backtests/{id}/` | Retrieve a run with its metrics |
+| `GET /api/backtests/{id}/trades/` | Trade log for a run |
+| `GET /api/schema/` | OpenAPI 3 schema |
+| `GET /api/schema/swagger-ui/` | Swagger UI |
+
+`Strategy.parameters` is a free-form JSON object that carries the engine
+parameters plus the frontend's `_meta` envelope (strategy-JSON schema version +
+logic graph); it is kept byte-for-byte compatible across repos.
+
+Regenerate the committed schema file after changing the API:
+
+```bash
+python manage.py spectacular --file openapi.yaml
+```
+
 ## Testing
 
 ```bash
