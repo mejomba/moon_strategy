@@ -164,6 +164,65 @@ class SchemaApiTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
 
+def _threshold_graph(value: float) -> dict:
+    """enter_long when price > value, exit when price < value."""
+    return {
+        "nodes": [
+            {"id": "p", "type": "indicator", "op": "price", "params": {}},
+            {"id": "c", "type": "indicator", "op": "constant", "params": {"value": value}},
+            {"id": "gt", "type": "condition", "op": "greater_than", "params": {}},
+            {"id": "lt", "type": "condition", "op": "less_than", "params": {}},
+            {"id": "enter", "type": "signal", "op": "enter_long", "params": {}},
+            {"id": "exit", "type": "signal", "op": "exit", "params": {}},
+        ],
+        "edges": [
+            {"id": "1", "source": "p", "target": "gt", "targetPort": "a"},
+            {"id": "2", "source": "c", "target": "gt", "targetPort": "b"},
+            {"id": "3", "source": "p", "target": "lt", "targetPort": "a"},
+            {"id": "4", "source": "c", "target": "lt", "targetPort": "b"},
+            {"id": "5", "source": "gt", "target": "enter", "targetPort": "in"},
+            {"id": "6", "source": "lt", "target": "exit", "targetPort": "in"},
+        ],
+    }
+
+
+class GraphStrategyApiTests(APITestCase):
+    def _run(self, parameters: dict):
+        strategy = Strategy.objects.create(
+            name="Graph strat", kind="graph", parameters=parameters
+        )
+        return self.client.post(
+            "/api/backtests/",
+            {
+                "strategy": strategy.id,
+                "symbol": "BTCUSDT",
+                "timeframe": "1d",
+                "start_date": "2023-01-01",
+                "end_date": "2023-12-31",
+                "initial_capital": 10000,
+            },
+            format="json",
+        )
+
+    def test_graph_strategy_runs_end_to_end(self):
+        resp = self._run({"graph": _threshold_graph(100)})
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data["status"], Backtest.Status.COMPLETED)
+        self.assertIsNotNone(resp.data["final_equity"])
+
+    def test_graph_from_legacy_meta_location_runs(self):
+        resp = self._run({"_meta": {"schemaVersion": 1, "graph": _threshold_graph(100)}})
+        self.assertEqual(resp.data["status"], Backtest.Status.COMPLETED)
+
+    def test_invalid_graph_fails_with_message(self):
+        bad = _threshold_graph(100)
+        bad["nodes"] = [n for n in bad["nodes"] if n["id"] != "enter"]
+        bad["edges"] = [e for e in bad["edges"] if e["target"] != "enter"]
+        resp = self._run({"graph": bad})
+        self.assertEqual(resp.data["status"], Backtest.Status.FAILED)
+        self.assertIn("enter_long", resp.data["error_message"])
+
+
 class CorsTests(APITestCase):
     def test_api_response_allows_the_frontend_origin(self):
         resp = self.client.get(

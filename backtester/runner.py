@@ -84,6 +84,12 @@ def run_backtest(backtest):
         # data-source key which is handled by ``load_bars``. No DB writes here.
         params = dict(backtest.strategy.parameters or {})
         params.pop("data_csv", None)
+        # Graph strategies execute the logic graph stored under "graph"; accept
+        # the frontend's legacy "_meta.graph" location as a fallback.
+        if backtest.strategy.kind == "graph" and not params.get("graph"):
+            meta = params.get("_meta") or {}
+            if meta.get("graph"):
+                params["graph"] = meta["graph"]
         strategy = get_strategy(backtest.strategy.kind, **params)
 
         bars = load_bars(backtest)
