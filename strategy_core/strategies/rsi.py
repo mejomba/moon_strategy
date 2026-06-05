@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from backtester.engine.data import Bar
-from backtester.engine.indicators import rsi
-from backtester.engine.strategies.base import FLAT, LONG, BaseStrategy
+from strategy_core.data import Bar
+from strategy_core.indicators import rsi
+from strategy_core.strategies.base import FLAT, LONG, BaseStrategy
 
 
 class RsiStrategy(BaseStrategy):

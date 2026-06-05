@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta, timezone
 
-from django.test import SimpleTestCase
+import unittest
 
-from backtester.engine.data import Bar, generate_synthetic
-from backtester.engine.engine import BacktestEngine
-from backtester.engine.strategies import SmaCrossoverStrategy, get_strategy
-from backtester.engine.strategies.base import FLAT, LONG, BaseStrategy
+from strategy_core.data import Bar, generate_synthetic
+from strategy_core.engine import BacktestEngine
+from strategy_core.strategies import SmaCrossoverStrategy, get_strategy
+from strategy_core.strategies.base import FLAT, LONG, BaseStrategy
 
 
 def _bars_from_closes(closes):
@@ -40,7 +40,7 @@ class _BuyAndHoldThenFlat(BaseStrategy):
         return [LONG] * half + [FLAT] * (len(bars) - half)
 
 
-class EngineTests(SimpleTestCase):
+class EngineTests(unittest.TestCase):
     def test_buy_and_hold_return_matches_price_change(self):
         # Price doubles: a fully-invested long should roughly double equity.
         closes = [100, 110, 120, 150, 200]

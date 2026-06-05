@@ -1,9 +1,9 @@
-from django.test import SimpleTestCase
+import unittest
 
-from backtester.engine.indicators import ema, rsi, sma
+from strategy_core.indicators import ema, rsi, sma
 
 
-class IndicatorTests(SimpleTestCase):
+class IndicatorTests(unittest.TestCase):
     def test_sma_basic(self):
         values = [1, 2, 3, 4, 5]
         result = sma(values, 3)

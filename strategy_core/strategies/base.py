@@ -1,6 +1,6 @@
 """Base class and signal conventions for trading strategies.
 
-A strategy maps a sequence of :class:`~backtester.engine.data.Bar` objects to a
+A strategy maps a sequence of :class:`~strategy_core.data.Bar` objects to a
 sequence of *target positions*, one per bar:
 
 * ``LONG``  (+1) — be fully long at this bar's close
@@ -13,7 +13,7 @@ changes. Strategies are therefore stateless and easy to test in isolation.
 
 from __future__ import annotations
 
-from backtester.engine.data import Bar
+from strategy_core.data import Bar
 
 LONG = 1
 FLAT = 0
