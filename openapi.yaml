@@ -132,6 +132,52 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedTradeList'
           description: ''
+  /api/marketdata/datasets/:
+    get:
+      operationId: marketdata_datasets_list
+      description: List the stored (symbol, timeframe) series and their coverage.
+      tags:
+      - marketdata
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dataset'
+          description: ''
+  /api/marketdata/import/:
+    post:
+      operationId: marketdata_import_create
+      description: Import a CSV of OHLCV candles for a symbol/timeframe (validated
+        on ingest).
+      tags:
+      - marketdata
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CandleImport'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CandleImport'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+          description: ''
   /api/strategies/:
     get:
       operationId: strategies_list
@@ -664,6 +710,48 @@ components:
         * `running` - Running
         * `completed` - Completed
         * `failed` - Failed
+    CandleImport:
+      type: object
+      description: Multipart payload to import a CSV of OHLCV candles.
+      properties:
+        symbol:
+          type: string
+          maxLength: 32
+        timeframe:
+          type: string
+          maxLength: 8
+        file:
+          type: string
+          format: uri
+          description: 'CSV with columns: timestamp, open, high, low, close[, volume].'
+      required:
+      - file
+      - symbol
+      - timeframe
+    Dataset:
+      type: object
+      description: A stored (symbol, timeframe) series with its coverage.
+      properties:
+        symbol:
+          type: string
+        timeframe:
+          type: string
+        count:
+          type: integer
+        start:
+          type: string
+          format: date-time
+          nullable: true
+        end:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - count
+      - end
+      - start
+      - symbol
+      - timeframe
     EquityPoint:
       type: object
       description: One sample of portfolio value on the equity curve.
@@ -679,6 +767,45 @@ components:
       required:
       - equity
       - t
+    ImportResult:
+      type: object
+      description: Summary of an import run.
+      properties:
+        symbol:
+          type: string
+        timeframe:
+          type: string
+        imported:
+          type: integer
+        stored:
+          type: integer
+          description: New candles written (excludes existing).
+        skipped:
+          type: integer
+        duplicates:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+        start:
+          type: string
+          format: date-time
+          nullable: true
+        end:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - duplicates
+      - end
+      - errors
+      - imported
+      - skipped
+      - start
+      - stored
+      - symbol
+      - timeframe
     KindEnum:
       enum:
       - sma_crossover

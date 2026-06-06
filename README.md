@@ -82,10 +82,15 @@ Each `Trade` records `gross_pnl`, `commission`, `funding`, and net `pnl`.
 
 ### Data sources
 
-By default a deterministic synthetic price series is generated from the
-backtest's date range (seeded by the symbol, so runs are reproducible). To use
-your own data, add a `data_csv` key to the strategy's `parameters` pointing at a
-CSV with `timestamp, open, high, low, close[, volume]` columns.
+A backtest resolves market data in this order: an explicit `data_csv` path on
+the strategy's `parameters`, then **ingested historical candles** (the
+`marketdata` app) for the run's symbol/timeframe, then a deterministic
+**synthetic** fallback. Synthetic runs are flagged with a `synthetic_data`
+warning so results are never mistaken for real ones.
+
+Import real data via `POST /api/marketdata/import/` (CSV columns:
+`timestamp, open, high, low, close[, volume]`); rows are validated and cleaned on
+ingest (bad/inconsistent rows skipped, duplicates dropped, sorted).
 
 ### Running backtests
 
@@ -112,6 +117,8 @@ the source of truth the frontend consumes to generate its typed client.
 | `GET/POST /api/backtests/` | List / create runs (`POST` runs synchronously) |
 | `GET /api/backtests/{id}/` | Retrieve a run with its metrics + equity curve |
 | `GET /api/backtests/{id}/trades/` | Trade log for a run |
+| `POST /api/marketdata/import/` | Import an OHLCV CSV (validated/cleaned on ingest) |
+| `GET /api/marketdata/datasets/` | List stored (symbol, timeframe) series + coverage |
 | `GET /api/schema/` | OpenAPI 3 schema |
 | `GET /api/schema/swagger-ui/` | Swagger UI |
 
