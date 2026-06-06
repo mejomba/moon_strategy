@@ -35,32 +35,73 @@ def build_cost_model(backtest) -> CostModel:
     )
 
 
-def load_bars(backtest) -> list[Bar]:
-    """Resolve market data for a backtest.
+def _load_stored_bars(backtest) -> list[Bar]:
+    """Load ingested candles for this backtest's symbol/timeframe and range."""
+    from marketdata.models import Candle
 
-    If the strategy parameters include a ``data_csv`` path, bars are loaded from
-    that file; otherwise a deterministic synthetic series is generated from the
-    backtest's date range (seeded by the symbol so runs are reproducible).
+    candles = Candle.objects.filter(
+        symbol=backtest.symbol,
+        timeframe=backtest.timeframe,
+        timestamp__date__gte=backtest.start_date,
+        timestamp__date__lte=backtest.end_date,
+    ).order_by("timestamp")
+    return [
+        Bar(
+            timestamp=c.timestamp,
+            open=c.open,
+            high=c.high,
+            low=c.low,
+            close=c.close,
+            volume=c.volume,
+        )
+        for c in candles
+    ]
+
+
+def load_bars(backtest) -> tuple[list[Bar], str]:
+    """Resolve market data for a backtest, returning ``(bars, source)``.
+
+    Order of preference: an explicit ``data_csv`` path on the strategy, then
+    ingested historical candles, then a deterministic synthetic series. The
+    source is reported so the runner can warn when results rest on synthetic
+    data (CLAUDE.md §8).
     """
     params = backtest.strategy.parameters or {}
     csv_path = params.get("data_csv")
     if csv_path:
         bars = load_csv(csv_path)
-        return [
+        bars = [
             b
             for b in bars
             if backtest.start_date <= b.timestamp.date() <= backtest.end_date
         ]
+        return bars, "csv"
+
+    stored = _load_stored_bars(backtest)
+    if stored:
+        return stored, "stored"
+
     # Stable per-symbol seed so synthetic runs are reproducible across
     # processes (Python's built-in hash() is salted per interpreter).
     digest = hashlib.md5(backtest.symbol.encode()).hexdigest()
     seed = int(digest[:8], 16)
-    return synthetic_from_dates(
+    synthetic = synthetic_from_dates(
         backtest.start_date,
         backtest.end_date,
         timeframe=backtest.timeframe,
         seed=seed,
     )
+    return synthetic, "synthetic"
+
+
+SYNTHETIC_WARNING = {
+    "code": "synthetic_data",
+    "severity": "warning",
+    "message": (
+        "No historical data found for this symbol/timeframe, so a synthetic "
+        "price series was used. Import real market data for meaningful results."
+    ),
+}
 
 
 def run_backtest(backtest):
@@ -92,7 +133,7 @@ def run_backtest(backtest):
                 params["graph"] = meta["graph"]
         strategy = get_strategy(backtest.strategy.kind, **params)
 
-        bars = load_bars(backtest)
+        bars, data_source = load_bars(backtest)
         engine = BacktestEngine(
             initial_capital=float(backtest.initial_capital),
             timeframe=backtest.timeframe,
@@ -146,10 +187,13 @@ def run_backtest(backtest):
         backtest.win_rate_pct = m.win_rate_pct
         backtest.total_commission = _to_decimal(m.total_commission, "0.01")
         backtest.total_funding = _to_decimal(m.total_funding, "0.01")
-        backtest.warnings = [
+        warnings = [
             w.to_dict()
             for w in assess_quality(m, float(backtest.initial_capital))
         ]
+        if data_source == "synthetic":
+            warnings.insert(0, SYNTHETIC_WARNING)
+        backtest.warnings = warnings
         backtest.equity_curve = _serialize_equity_curve(result.equity_curve)
         backtest.status = Backtest.Status.COMPLETED
         backtest.completed_at = timezone.now()
