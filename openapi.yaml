@@ -151,6 +151,34 @@ paths:
                 items:
                   $ref: '#/components/schemas/Dataset'
           description: ''
+  /api/marketdata/datasets/{symbol}/{timeframe}/:
+    delete:
+      operationId: marketdata_datasets_destroy
+      description: Delete all candles for a (symbol, timeframe) dataset.
+      parameters:
+      - in: path
+        name: symbol
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: timeframe
+        schema:
+          type: string
+        required: true
+      tags:
+      - marketdata
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetDeleteResult'
+          description: ''
   /api/marketdata/import/:
     post:
       operationId: marketdata_import_create
@@ -750,6 +778,21 @@ components:
       - count
       - end
       - start
+      - symbol
+      - timeframe
+    DatasetDeleteResult:
+      type: object
+      description: Result of deleting a dataset.
+      properties:
+        symbol:
+          type: string
+        timeframe:
+          type: string
+        deleted:
+          type: integer
+          description: Number of candles removed.
+      required:
+      - deleted
       - symbol
       - timeframe
     EquityPoint:

@@ -16,6 +16,7 @@ from marketdata.ingest import clean_rows
 from marketdata.models import Candle
 from marketdata.serializers import (
     CandleImportSerializer,
+    DatasetDeleteResultSerializer,
     DatasetSerializer,
     ImportResultSerializer,
 )
@@ -32,6 +33,21 @@ class DatasetViewSet(viewsets.ViewSet):
             .order_by("symbol", "timeframe")
         )
         return Response(DatasetSerializer(list(rows), many=True).data)
+
+
+class DatasetDeleteView(views.APIView):
+    """Delete all candles for a (symbol, timeframe) dataset."""
+
+    @extend_schema(responses={200: DatasetDeleteResultSerializer})
+    def delete(self, request, symbol: str, timeframe: str):
+        deleted, _ = Candle.objects.filter(
+            symbol=symbol, timeframe=timeframe
+        ).delete()
+        return Response(
+            DatasetDeleteResultSerializer(
+                {"symbol": symbol, "timeframe": timeframe, "deleted": deleted}
+            ).data
+        )
 
 
 class CandleImportView(views.APIView):

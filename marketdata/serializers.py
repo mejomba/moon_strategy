@@ -33,3 +33,11 @@ class DatasetSerializer(serializers.Serializer):
     count = serializers.IntegerField()
     start = serializers.DateTimeField(allow_null=True)
     end = serializers.DateTimeField(allow_null=True)
+
+
+class DatasetDeleteResultSerializer(serializers.Serializer):
+    """Result of deleting a dataset."""
+
+    symbol = serializers.CharField()
+    timeframe = serializers.CharField()
+    deleted = serializers.IntegerField(help_text="Number of candles removed.")

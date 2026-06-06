@@ -44,6 +44,24 @@ class ImportApiTests(APITestCase):
         self.assertEqual(resp.data["stored"], 0)  # all already present
         self.assertEqual(Candle.objects.filter(symbol="BTCUSDT").count(), 2)
 
+    def test_delete_dataset_removes_candles(self):
+        self.client.post(
+            "/api/marketdata/import/",
+            {"symbol": "BTCUSDT", "timeframe": "1d", "file": upload()},
+            format="multipart",
+        )
+        self.assertEqual(Candle.objects.filter(symbol="BTCUSDT").count(), 2)
+
+        resp = self.client.delete("/api/marketdata/datasets/BTCUSDT/1d/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["deleted"], 2)
+        self.assertEqual(Candle.objects.filter(symbol="BTCUSDT").count(), 0)
+
+    def test_delete_missing_dataset_reports_zero(self):
+        resp = self.client.delete("/api/marketdata/datasets/NOPE/1d/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["deleted"], 0)
+
     def test_datasets_lists_coverage(self):
         self.client.post(
             "/api/marketdata/import/",
